@@ -75,3 +75,5 @@ UDP/.vs/UDP/v17/ipch/AutoPCH/f42d4e5f5424fea8/BACKUP.ipch
 UDP/UDP_SERVER/x64/Debug/NetworkFramework.obj
 UDP/UDP_SERVER/x64/Debug/backup.obj
 UDP/UDP_CLIENT/x64/Debug/backup.obj
+*.ipch
+UDP/.vs/UDP/v16/Browse.VC.opendb
