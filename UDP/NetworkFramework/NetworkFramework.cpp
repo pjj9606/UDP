@@ -136,12 +136,115 @@ bool NetworkFramework::SendMsg(SOCKET sendSocket, SOCKADDR_IN sendSockInfo, char
 	return false;
 }
 
-void NetworkFramework::EncodeMsg()
+void NetworkFramework::EncodeMsg(char* msg)
 {
+
 }
 
-void NetworkFramework::DecodeMsg()
+void NetworkFramework::DecodeMsg(char* msg)
 {
+	unsigned int commandMsg;
+
+	char decodeBuffer[BUFFER_SIZE];
+	int msgPivot = 0;
+	memset(decodeBuffer, 0, sizeof(decodeBuffer));
+	// 지시 메시지
+	for (int i = 0; i < 4; ++i) {							// 바이트 만큼 버퍼에 쌓고
+		decodeBuffer[i] = msg[i];
+		msgPivot++;	// msg 어디까지 읽었나 pivot에 기록
+	}
+	memcpy(&commandMsg, decodeBuffer, sizeof(commandMsg));	// 메모리 복사
+	memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+
+	
+	// II_001
+	if (commandMsg == 31) {	/// TODO:이거 열거형으로 바꿔야 하는데
+		
+	}
+	else if (commandMsg == 32) {
+		int nowPivot = msgPivot;
+		for (int i = 0; i < 36; ++i) {
+			decodeBuffer[i] = msg[nowPivot + i];
+			msgPivot++;			
+		}
+		/// TODO: 좌표 구조체에 바로 memcpy때리면 됨
+		memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+	}
+	//_____________ II_001 _____________
+	// TCC -> ATS
+	else if (commandMsg == 33) {
+		// StartScenario()
+	}
+	else if (commandMsg == 34) {
+		// InterCeptComplete()
+	}
+	else if (commandMsg == 35) {
+		// InitScenario()
+	}
+	//_____________ II_002 _____________
+	//TCC -> MSS
+	else if (commandMsg == 61) {		
+		// NOSTATE
+	}	
+	else if (commandMsg == 62) {
+		// ShootFire	
+		int nowPivot = msgPivot;
+		for (int i = 0; i < 20; ++i) {
+			decodeBuffer[i] = msg[nowPivot + i];
+			msgPivot++;
+		}
+		memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+	}	
+	else if (commandMsg == 63) {
+		// IntereptComplete
+	}	
+	else if (commandMsg == 64) {
+		// InitScenario
+	}
+	//_____________ II_003 _____________
+	// ATS -> TCC
+	else if(commandMsg ==51){
+		// NOSTATE
+	}
+	else if (commandMsg == 52) {
+		/// TODO: 해당하는 변수에 memcpy
+		// MisslePosition
+		int nowPivot = msgPivot;		
+		for (int i = 0; i < 4; ++i) {
+			decodeBuffer[i] = msg[nowPivot + i];
+			msgPivot++;			
+		}
+		memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+
+		nowPivot = msgPivot;
+		for (int i = 0; i < 16; ++i) {
+			decodeBuffer[i] = msg[nowPivot + i];
+			msgPivot++;
+		}
+		memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+	}
+
+	//_____________ II_004 _____________
+	// MSS -> TCC
+	else if (commandMsg == 41) {
+		// NOSTATE
+	}
+	else if (commandMsg == 42) {
+		// MisslePosition
+		int nowPivot = msgPivot;
+		for (int i = 0; i < 4; ++i) {
+			decodeBuffer[i] = msg[nowPivot + i];
+			msgPivot++;
+		}
+		memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+
+		nowPivot = msgPivot;
+		for (int i = 0; i < 16; ++i) {
+			decodeBuffer[i] = msg[nowPivot + i];
+			msgPivot++;
+		}
+		memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
+	}	
 }
 
 bool NetworkFramework::BindSocket(SOCKET listenSocket, SOCKADDR_IN serverAddr_in)
@@ -154,3 +257,4 @@ bool NetworkFramework::BindSocket(SOCKET listenSocket, SOCKADDR_IN serverAddr_in
 	}
 	return true;
 }
+

@@ -27,13 +27,10 @@ void Network()
     memset(&atsInfo, 0, sizeof(atsInfo));
     tccInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::TCC);    // 서버 주소정보 구조체  
     atsInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::ATS);     // 클라이언트에서 받는 주소정보를 recv떄 저장해 둘 구조체, 사실 여기서는 별 필요 없는듯
-//    memset(&clientInfo, 0, sizeof(clientInfo));
         
-
     // bind - 새로 오는 클라이언트를 받을 welcome 소켓    
     NF.BindSocket(recvSocket, tccInfo);
     // 등록
-    // 클래스 멤버함수를 스레드로 실행시키기 위함인데 모양새가 영...    
     thread registRecvThread = NF.GetRegistRecvSockThread(recvSocket, tccInfo);        
     Sleep(100);
 

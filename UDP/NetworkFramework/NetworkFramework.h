@@ -41,13 +41,12 @@ public:
     // https://stackoverflow.com/questions/10673585/start-thread-with-member-function
     thread GetRegistRecvSockThread(SOCKET recvSocket, SOCKADDR_IN recvSockInfo);       
     thread GetRecvMsgQueueThread();
-    thread GetSendMsgQueueThread();
-    
+    thread GetSendMsgQueueThread();    
     void RunRecvMsgQueue();
     void RunSendMsgQueue();
     bool SendMsg(SOCKET sendSocket, SOCKADDR_IN sendSockInfo, char* msg);    // 소켓, 어디로 보낼지, 메시지
-    void EncodeMsg();
-    void DecodeMsg();   // 수신한 바이너리 형태의 메시지를 디코딩
+    void EncodeMsg(char* msg);
+    void DecodeMsg(char* msg);   // 수신한 바이너리 형태의 메시지를 디코딩
     bool BindSocket(SOCKET socket, SOCKADDR_IN sockaddr_in);                  // Server 측에서 처음에 Bind 해줘야 함
 };
 
