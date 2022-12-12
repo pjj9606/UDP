@@ -21,6 +21,9 @@
     <ClCompile Include="backup.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\NetworkFramework\NetworkFramework.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\UDP_SERVER\NETWORK_INFO.h">

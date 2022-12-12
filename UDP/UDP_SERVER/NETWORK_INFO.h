@@ -4,7 +4,14 @@
 
 enum Server_port
 {
-    TCC = 6000,
+    TCC = 7000,
     ATS,
     MSS
+};
+
+enum simulator
+{
+    tcc = 0,
+    ats,
+    mss
 };

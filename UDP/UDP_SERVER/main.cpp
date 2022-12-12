@@ -9,60 +9,70 @@
 #include <winsock2.h> // 윈속 헤더 포함 
 #include "NETWORK_INFO.h"
 #include "../NetworkFramework/NetworkFramework.h"
-#include <queue>
-
-
 #pragma comment (lib,"ws2_32.lib") // 윈속 라이브러리 링크
-
 using namespace std;
 
+NetworkFramework NF;
+
+
 void Network()
-{
-    NetworkFramework NF;
+{        
     NF.LoadWSA();
 
-    SOCKET serverSocket = NF.NewSocket();                                       // 서버측 소켓 생성(me)
-    SOCKADDR_IN serverInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::TCC);    // 서버 주소정보 구조체
-    
-    SOCKADDR_IN fromClient;     // 클라이언트에서 받는 주소정보를 recv떄 저장해 둘 구조체, 사실 여기서는 별 필요 없는듯
-    memset(&fromClient, 0, sizeof(fromClient));
+    SOCKET sendSocket = NF.NewSocket();                                       // 서버측 소켓 생성(me)
+    SOCKET recvSocket = NF.NewSocket();
+    SOCKADDR_IN tccInfo;
+    SOCKADDR_IN atsInfo;
+    memset(&tccInfo, 0, sizeof(tccInfo));
+    memset(&atsInfo, 0, sizeof(atsInfo));
+    tccInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::TCC);    // 서버 주소정보 구조체  
+    atsInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::ATS);     // 클라이언트에서 받는 주소정보를 recv떄 저장해 둘 구조체, 사실 여기서는 별 필요 없는듯
+//    memset(&clientInfo, 0, sizeof(clientInfo));
         
 
     // bind - 새로 오는 클라이언트를 받을 welcome 소켓    
-    NF.BindSocket(serverSocket, serverInfo);
-
+    NF.BindSocket(recvSocket, tccInfo);
     // 등록
     // 클래스 멤버함수를 스레드로 실행시키기 위함인데 모양새가 영...    
-    thread registRecvThread = NF.GetRegistRecvSockThread(serverSocket, fromClient);    
+    thread registRecvThread = NF.GetRegistRecvSockThread(recvSocket, tccInfo);        
     Sleep(100);
-    printf("등록완료\n");
 
     /****************FOR TEST******************/
     thread sendMSGThread = NF.GetSendMsgQueueThread();
     Sleep(100);
 
-    thread recvMSGThread = NF.GetRecvMsgQueueThread();    // 수신 받을 소켓마다 스레드 돌려서 실행, 매개변수로 소켓 넣으면 됨
+    thread recvMSGThread = NF.GetRecvMsgQueueThread();    
     Sleep(100);
 
-    // 보낼 메시지가 생길 때마다 큐에 넣으면 sendMessageQueue Thread 에서 처리함
-    /*SendMSG sendMsg = { serverSocket, fromClient };
-    memcpy(sendMsg.buffer, sendBuffer, sizeof(sendBuffer));
+    // 보낼 메시지가 생    길 때마다 큐에 넣으면 sendMessageQueue Thread 에서 처리함    
 
-    sendMessageQueue.push(sendMsg);*/
+    //Sleep(5000) ;    
+    //NF.SendMsg(serverSocket, clientInfo, sendBuffer);
 
+    char sendBuffer[BUFFER_SIZE] = "hi I'm server";
+    while(!NF.IsConnected(simulator::ats)){
+        continue;
+    }
+    NF.SendMsg(sendSocket, atsInfo, sendBuffer);
     registRecvThread.join();
     recvMSGThread.join();
     sendMSGThread.join();
     /******************************************/
 
-    closesocket(serverSocket);
+    closesocket(sendSocket);
+    closesocket(recvSocket);
     WSACleanup();
 }
 
 
 int main()
 {
-    thread networkThread(Network);
+    thread networkThread(Network);    
+
+    // 현재는 10초 지나면 그냥 연결 되도록
+    // TODO: 모의기들끼리 처음에 연결 확인 메시지를 주고받으면서 setConnect 처리 후 메시지 전송 되도록
+    Sleep(10000);
+    NF.SetConnect(simulator::ats);
 
     networkThread.join();
 

@@ -18,137 +18,50 @@ UDP_Client
 #include <thread>
 #include <queue>s
 #include <cstring>
-
+#include "../NetworkFramework/NetworkFramework.h"
 #pragma comment (lib,"ws2_32.lib") // 윈속 라이브러리 링크
-#define BUFFER_SIZE 1024 // 버퍼 사이즈
-
 using namespace std;
 
-typedef struct RecvMSG {
-    char buffer[1024];
-} RecvMSG;
-
-typedef struct SendMSG {
-    SOCKET socket;
-    SOCKADDR_IN sockAddr; // 어디로 보낼 지   
-    char buffer[1024];
-} SendMSG;
-
-queue<SendMSG> sendMessageQueue;        // 송신 메시지 큐
-queue<RecvMSG> recvMessageQueue;        // 수신 메시지 큐
-
-// 수신 큐 스레드
-void RecvMsgThread()
-{
-    while (1) {
-        while (!recvMessageQueue.empty()) {
-            printf("Received\n");
-            RecvMSG receiveMsg = recvMessageQueue.front();
-            recvMessageQueue.pop();
-            // 디코딩
-        }
-    }
-}
-
-// 발신 큐 스레드
-void SendMsgThread()
-{
-    printf("SendMsgThread 시작\n");
-    while (1) {
-        while (!sendMessageQueue.empty()) {
-            SendMSG sendMsg = sendMessageQueue.front();
-            sendMessageQueue.pop();
-            // 전송
-            int Send_Size = sendto(sendMsg.socket, sendMsg.buffer, BUFFER_SIZE, 0, (struct sockaddr*)&sendMsg.sockAddr, sizeof(sendMsg.sockAddr));
-            printf("Send Packet!\n");
-            printf("%s\n", sendMsg.buffer);
-
-            if (Send_Size != BUFFER_SIZE) {
-                cout << "sendto() error!" << endl;
-                exit(0);
-            }
-        }
-    }
-}
-
-void RegistClient(SOCKET socket, SOCKADDR_IN fromServer)
-{
-    printf("RecvMsgThread 시작\n");
-    char buffer[BUFFER_SIZE];
-    memset(&buffer, 0, sizeof(buffer));
-    int fromServerSize = sizeof(fromServer);
-
-    // 수신 등록 & 대기
-    while (1) {
-        int recvSize = recvfrom(socket, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&fromServer, &fromServerSize);
-
-        // 수신 패킷 오류
-        if (recvSize < 0) {
-            cout << "recvfrom() error!" << endl;
-            exit(0);
-        }
-        printf("Received\n");
-        /// 수신 되면 수신 메시지 큐에 넣기
-        RecvMSG recvMSG;
-        memcpy(recvMSG.buffer, buffer, sizeof(buffer));
-        recvMessageQueue.push(recvMSG);
-    }
-}
-
-bool LoadWSA()
-{
-    WSADATA wsaData;        // 윈속 데이터 구조체
-    if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
-        cout << "WinSock 초기화부분에서 문제 발생 " << endl;
-        WSACleanup();
-        exit(0);
-    }
-    return true;
-}
+NetworkFramework NF;
 
 void Network()
 {
-    LoadWSA();
+        
+    NF.LoadWSA();
 
-    SOCKADDR_IN fromServer;   // 서버에서 받는 주소정보 구조체    
-    SOCKADDR_IN toServer;   // 서버로 보내는 주소정보 구조체정보
-    SOCKET clientSocket;
-    int fromServerSize, recvSize;
-    char sendBuffer[BUFFER_SIZE];
-
-    memset(sendBuffer, 0, sizeof(sendBuffer));  memset(&toServer, 0, sizeof(toServer)); memset(&fromServer, 0, sizeof(fromServer));
-
-    toServer.sin_family = AF_INET;
-    toServer.sin_addr.s_addr = inet_addr(SERVER_IP);
-    toServer.sin_port = htons(SERVER_PORT); // 포트번호
-
-    clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    if (clientSocket == INVALID_SOCKET) {
-        cout << "소켓을 생성할수 없습니다." << endl;
-        closesocket(clientSocket);
-        WSACleanup();
-        exit(0);
-    }
+    SOCKET sendSocket = NF.NewSocket();   // 내 소켓(클라이언트)
+    SOCKET recvSocket = NF.NewSocket();   // 내 소켓(클라이언트)
+    SOCKADDR_IN tccInfo;
+    SOCKADDR_IN atsInfo;
+    memset(&tccInfo, 0, sizeof(tccInfo));
+    memset(&atsInfo, 0, sizeof(atsInfo));
+    tccInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::TCC);   // 서버로 보내는 주소정보 구조체정보
+    atsInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::ATS);   // 내 수신 addr
+    //memset(&fromServer, 0, sizeof(fromServer));
 
     /* _____________________For Test________________________*/
     // 보낼 메시지가 생길 때마다 큐에 넣으면 sendMessageQueue Thread 에서 처리함
-    SendMSG sendMsg = { clientSocket,toServer };
-    memcpy(sendMsg.buffer, sendBuffer, sizeof(sendBuffer));
-
-    sendMessageQueue.push(sendMsg);
+    char sendBuffer[BUFFER_SIZE] = "hi I'm client";
+    NF.SendMsg(sendSocket, tccInfo, sendBuffer);     // 담을 소켓, 도달 위치, 메시ㅈ    
+    NF.SendMsg(sendSocket, tccInfo, sendBuffer);     // 담을 소켓, 도달 위치, 메시ㅈ    
+    NF.SendMsg(sendSocket, tccInfo, sendBuffer);     // 담을 소켓, 도달 위치, 메시ㅈ    
 
     // 발신에서는 SockAddrIn이 필요하지 왜냐 1:다수의 소켓으로 보내니까 어디로 보낼지 지정을 해줘야 함    
-    thread sendMSGThread(SendMsgThread);
+    thread sendMSGThread = NF.GetSendMsgQueueThread();
     Sleep(100);
-    // 등록
-    RegistClient(clientSocket, fromServer);
-    thread recvMSGThread(RecvMsgThread);    // 수신 받을 소켓마다 스레드 돌려서 실행, 매개변수로 소켓 넣으면 됨
+    thread recvMSGThread = NF.GetRecvMsgQueueThread();    // 수신 받을 소켓마다 스레드 돌려서 실행, 매개변수로 소켓 넣으면 됨
     Sleep(100);
+    // 등록    
+    NF.BindSocket(recvSocket, atsInfo);
+    thread registClientThread = NF.GetRegistRecvSockThread(recvSocket, atsInfo);    
+    
+   
+    registClientThread.join();
     recvMSGThread.join();
     sendMSGThread.join();
 
-    closesocket(clientSocket);
+    closesocket(sendSocket);
+    closesocket(recvSocket);
     WSACleanup();
     /*________________________________________________________*/
 }

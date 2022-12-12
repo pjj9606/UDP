@@ -3,10 +3,11 @@
 // 반드시 스레드로 실행시켜야 함
 void NetworkFramework::RunRecvMsgQueue()
 {
+	printf("RecvMsgThread 시작\n");
 	while (1) {
 		while (!recvMsgQueue.empty()) {
-			printf("Received\n");
-			RecvMSG receiveMsg = recvMsgQueue.front();
+			printf("Received: %s\n", recvMsgQueue.front().buffer);
+			RecvMSG receiveMsg = recvMsgQueue.front();			
 			recvMsgQueue.pop();
 			// 디코딩
 		}
@@ -23,8 +24,7 @@ void NetworkFramework::RunSendMsgQueue()
 			sendMsgQueue.pop();
 			// 전송
 			int Send_Size = sendto(sendMsg.socket, sendMsg.buffer, BUFFER_SIZE, 0, (struct sockaddr*)&sendMsg.sockAddr, sizeof(sendMsg.sockAddr));
-			printf("Send Packet!\n");
-			printf("%s\n", sendMsg.buffer);
+			printf("Send Packet!: %s\n", sendMsg.buffer);			
 
 			if (Send_Size != BUFFER_SIZE) {
 				cout << "sendto() error!" << endl;
@@ -45,6 +45,16 @@ bool NetworkFramework::LoadWSA()
 	return true;
 }
 
+bool NetworkFramework::IsConnected(int simulator)
+{	
+	return connect[simulator];
+}
+
+void NetworkFramework::SetConnect(int simulator)
+{
+	connect[simulator] = true;
+}
+
 SOCKET NetworkFramework::NewSocket()
 {
 	SOCKET s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -56,8 +66,6 @@ SOCKET NetworkFramework::NewSocket()
 	}
 	return s;
 }
-
-
 
 SOCKADDR_IN NetworkFramework::NewSocketAddrIn(const char* server_ip, int server_port)
 {
@@ -74,23 +82,23 @@ SOCKADDR_IN NetworkFramework::NewSocketAddrIn(const char* server_ip, int server_
 // 반드시 스레드로 실행시켜야 함
 void NetworkFramework::RegistRecvSocket(SOCKET recvSocket, SOCKADDR_IN recvSockInfo)
 {
+	memset(&recvSockInfo, 0, sizeof(recvSockInfo));
+
 	printf("ReigstRecvSocket....\n");
 	char buffer[BUFFER_SIZE];
 	memset(&buffer, 0, sizeof(buffer));
 	int fromServerSize = sizeof(recvSockInfo);
 	printf("ReigstRecvSocket 완료\n");
-
+	
 	printf("수신 대기 시작\n");
 	// 수신 등록 & 대기
 	while (1) {
-		int recvSize = recvfrom(recvSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&recvSockInfo, &fromServerSize);
-
+		int recvSize = recvfrom(recvSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&recvSockInfo, &fromServerSize);			
 		// 수신 패킷 오류
 		if (recvSize < 0) {
 			cout << "recvfrom() error!" << endl;
 			exit(0);
-		}
-		printf("Received\n");
+		}				
 		/// 수신 되면 수신 메시지 큐에 넣기
 		RecvMSG recvMSG;
 		memcpy(recvMSG.buffer, buffer, sizeof(buffer));
