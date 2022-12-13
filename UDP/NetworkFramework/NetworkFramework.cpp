@@ -5,9 +5,29 @@ void NetworkFramework::RunRecvMsgQueue()
 {
 	printf("RecvMsgThread 시작\n");
 	while (1) {
-		while (!recvMsgQueue.empty()) {
+		while (!recvMsgQueue.empty()) {			
 			printf("Received: %s\n", recvMsgQueue.front().buffer);
-			RecvMSG receiveMsg = recvMsgQueue.front();			
+			RecvMSG receiveMsg = recvMsgQueue.front();	
+			// portNum보고 연결 확인 처리			
+			//printf("%x\n", ntohs(receiveMsg.sockAddr.sin_port));
+			//printf("%d\n", ntohs(receiveMsg.sockAddr.sin_port));
+			//printf("%x\n", htons(receiveMsg.sockAddr.sin_port));
+			//printf("%d\n", htons(receiveMsg.sockAddr.sin_port));
+			//
+			//if (receiveMsg.sockAddr.sin_port >= 7000 && receiveMsg.sockAddr.sin_port <= 7002) {
+			//	printf("Wrong PortNum\n");
+			//	break;
+			//}
+			//if (!connect[receiveMsg.sockAddr.sin_port - 7000]) {				
+			//	connect[receiveMsg.sockAddr.sin_port] = true;
+			//	if (receiveMsg.sockAddr.sin_port == 7000)
+			//		printf("TCC Connected!\n");
+			//	else if (receiveMsg.sockAddr.sin_port == 7001)
+			//		printf("ATS Connected!\n");
+			//	if (receiveMsg.sockAddr.sin_port == 7002)
+			//		printf("MSS Connected!\n");
+			//}
+				
 			recvMsgQueue.pop();
 			// 디코딩
 		}
@@ -49,6 +69,7 @@ bool NetworkFramework::IsConnected(int simulator)
 {	
 	return connect[simulator];
 }
+
 
 void NetworkFramework::SetConnect(int simulator)
 {
@@ -94,13 +115,29 @@ void NetworkFramework::RegistRecvSocket(SOCKET recvSocket, SOCKADDR_IN recvSockI
 	// 수신 등록 & 대기
 	while (1) {
 		int recvSize = recvfrom(recvSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&recvSockInfo, &fromServerSize);			
-		// 수신 패킷 오류
+		// 수신 패킷 오류		
 		if (recvSize < 0) {
 			cout << "recvfrom() error!" << endl;
 			exit(0);
 		}				
-		/// 수신 되면 수신 메시지 큐에 넣기
+		/// 수신 되면 수신 메시지 큐에 넣기	
 		RecvMSG recvMSG;
+		//recvSockInfo.sin_port = 7000;
+		//recvMSG.sockAddr = recvSockInfo;		
+		//// 버퍼 앞부분 지시 메시지를 까서 누가 보냈는지 처리하기?
+		//unsigned int commandMsg;
+		//char decodeBuffer[BUFFER_SIZE];
+		//int msgPivot = 0;
+		//memset(decodeBuffer, 0, sizeof(decodeBuffer));
+		//// 지시 메시지
+		//for (int i = 0; i < 4; ++i) {							// 바이트 만큼 버퍼에 쌓고
+		//	decodeBuffer[i] = buffer[i];
+		//	msgPivot++;	// msg 어디까지 읽었나 pivot에 기록
+		//}
+		//memcpy(&commandMsg, decodeBuffer, sizeof(commandMsg));	// 메모리 복사
+		//printf("CommandMsg:%d\n", commandMsg);
+
+
 		memcpy(recvMSG.buffer, buffer, sizeof(buffer));
 		recvMsgQueue.push(recvMSG);
 	}
@@ -128,7 +165,7 @@ void NetworkFramework::RegistSendSocket(SOCKET sendSocket, SOCKADDR_IN sendSockI
 
 bool NetworkFramework::SendMsg(SOCKET sendSocket, SOCKADDR_IN sendSockInfo, char* msg)
 {
-	SendMSG sendMsg = { sendSocket, sendSockInfo };
+	SendMSG sendMsg = {sendSocket, sendSockInfo };
 	memcpy(sendMsg.buffer, msg, sizeof(sendMsg.buffer));
 
 	sendMsgQueue.push(sendMsg);
@@ -136,8 +173,11 @@ bool NetworkFramework::SendMsg(SOCKET sendSocket, SOCKADDR_IN sendSockInfo, char
 	return false;
 }
 
+// 버퍼에 다 담아야 하는데 얶떢계 하지
+// char* msg에 
 void NetworkFramework::EncodeMsg(char* msg)
 {
+
 
 }
 
@@ -157,6 +197,21 @@ void NetworkFramework::DecodeMsg(char* msg)
 	memset(decodeBuffer, 0, sizeof(decodeBuffer));			// 버퍼 비우기
 
 	
+			/// enum처리 해야함
+	if (commandMsg == 31 || commandMsg == 32 || commandMsg == 33 || commandMsg == 34 || commandMsg == 35) {
+		connect[0] = true;
+	}
+	else if (commandMsg == 61 || commandMsg == 62 || commandMsg == 63 || commandMsg == 64 || commandMsg == 65) {
+		connect[0] = true;
+	}
+	else if (commandMsg == 41 || commandMsg == 42 || commandMsg == 43 || commandMsg == 44 || commandMsg == 45) {
+		connect[1] = true;
+	}
+	else if (commandMsg == 51 || commandMsg == 52 || commandMsg == 53 || commandMsg == 54 || commandMsg == 55) {
+		connect[2] = true;
+	}
+
+
 	// II_001
 	if (commandMsg == 31) {	/// TODO:이거 열거형으로 바꿔야 하는데
 		

@@ -16,49 +16,52 @@ NetworkFramework NF;
 
 
 void Network()
-{        
+{            
     NF.LoadWSA();
 
     SOCKET sendSocket = NF.NewSocket();                                       // 서버측 소켓 생성(me)
     SOCKET recvSocket = NF.NewSocket();
     SOCKADDR_IN tccInfo;
-    SOCKADDR_IN atsInfo;
+    SOCKADDR_IN atsInfo;    
     memset(&tccInfo, 0, sizeof(tccInfo));
     memset(&atsInfo, 0, sizeof(atsInfo));
     tccInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::TCC);    // 서버 주소정보 구조체  
     atsInfo = NF.NewSocketAddrIn(SERVER_IP, Server_port::ATS);     // 클라이언트에서 받는 주소정보를 recv떄 저장해 둘 구조체, 사실 여기서는 별 필요 없는듯
         
-    // bind - 새로 오는 클라이언트를 받을 welcome 소켓    
+    /* _____________________For Test________________________*/
     NF.BindSocket(recvSocket, tccInfo);
     // 등록
     thread registRecvThread = NF.GetRegistRecvSockThread(recvSocket, tccInfo);        
     Sleep(100);
-
-    /****************FOR TEST******************/
+    
     thread sendMSGThread = NF.GetSendMsgQueueThread();
     Sleep(100);
 
     thread recvMSGThread = NF.GetRecvMsgQueueThread();    
     Sleep(100);
 
-    // 보낼 메시지가 생    길 때마다 큐에 넣으면 sendMessageQueue Thread 에서 처리함    
+    // 보낼 메시지가 생길 때마다 큐에 넣으면 sendMessageQueue Thread 에서 처리함    
 
     //Sleep(5000) ;    
     //NF.SendMsg(serverSocket, clientInfo, sendBuffer);
 
     char sendBuffer[BUFFER_SIZE] = "hi I'm server";
+    
     while(!NF.IsConnected(simulator::ats)){
+        printf("Waiting for ats connect...\n");
+        Sleep(1000);
         continue;
     }
+    NF.SendMsg(sendSocket, atsInfo, sendBuffer);
     NF.SendMsg(sendSocket, atsInfo, sendBuffer);
     registRecvThread.join();
     recvMSGThread.join();
     sendMSGThread.join();
-    /******************************************/
-
+    
     closesocket(sendSocket);
     closesocket(recvSocket);
     WSACleanup();
+    /*________________________________________________________*/
 }
 
 
@@ -68,8 +71,8 @@ int main()
 
     // 현재는 10초 지나면 그냥 연결 되도록
     // TODO: 모의기들끼리 처음에 연결 확인 메시지를 주고받으면서 setConnect 처리 후 메시지 전송 되도록
-    Sleep(10000);
-    NF.SetConnect(simulator::ats);
+    //Sleep(10000);
+    //NF.SetConnect(simulator::ats);
 
     networkThread.join();
 

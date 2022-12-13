@@ -45,17 +45,17 @@ void Network()
     NF.SendMsg(sendSocket, tccInfo, sendBuffer);     // 담을 소켓, 도달 위치, 메시ㅈ    
     NF.SendMsg(sendSocket, tccInfo, sendBuffer);     // 담을 소켓, 도달 위치, 메시ㅈ    
     NF.SendMsg(sendSocket, tccInfo, sendBuffer);     // 담을 소켓, 도달 위치, 메시ㅈ    
-
+    
+    // 등록    
+    NF.BindSocket(recvSocket, atsInfo);
+    thread registClientThread = NF.GetRegistRecvSockThread(recvSocket, atsInfo);    
+       
     // 발신에서는 SockAddrIn이 필요하지 왜냐 1:다수의 소켓으로 보내니까 어디로 보낼지 지정을 해줘야 함    
     thread sendMSGThread = NF.GetSendMsgQueueThread();
     Sleep(100);
     thread recvMSGThread = NF.GetRecvMsgQueueThread();    // 수신 받을 소켓마다 스레드 돌려서 실행, 매개변수로 소켓 넣으면 됨
     Sleep(100);
-    // 등록    
-    NF.BindSocket(recvSocket, atsInfo);
-    thread registClientThread = NF.GetRegistRecvSockThread(recvSocket, atsInfo);    
-    
-   
+
     registClientThread.join();
     recvMSGThread.join();
     sendMSGThread.join();
