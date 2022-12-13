@@ -7,29 +7,9 @@ void NetworkFramework::RunRecvMsgQueue()
 	while (1) {
 		while (!recvMsgQueue.empty()) {			
 			printf("Received: %s\n", recvMsgQueue.front().buffer);
-			RecvMSG receiveMsg = recvMsgQueue.front();	
-			// portNum보고 연결 확인 처리			
-			//printf("%x\n", ntohs(receiveMsg.sockAddr.sin_port));
-			//printf("%d\n", ntohs(receiveMsg.sockAddr.sin_port));
-			//printf("%x\n", htons(receiveMsg.sockAddr.sin_port));
-			//printf("%d\n", htons(receiveMsg.sockAddr.sin_port));
-			//
-			//if (receiveMsg.sockAddr.sin_port >= 7000 && receiveMsg.sockAddr.sin_port <= 7002) {
-			//	printf("Wrong PortNum\n");
-			//	break;
-			//}
-			//if (!connect[receiveMsg.sockAddr.sin_port - 7000]) {				
-			//	connect[receiveMsg.sockAddr.sin_port] = true;
-			//	if (receiveMsg.sockAddr.sin_port == 7000)
-			//		printf("TCC Connected!\n");
-			//	else if (receiveMsg.sockAddr.sin_port == 7001)
-			//		printf("ATS Connected!\n");
-			//	if (receiveMsg.sockAddr.sin_port == 7002)
-			//		printf("MSS Connected!\n");
-			//}
-				
+			RecvMSG receiveMsg = recvMsgQueue.front();						
 			recvMsgQueue.pop();
-			// 디코딩
+			/// 디코딩
 		}
 	}
 }
@@ -121,23 +101,7 @@ void NetworkFramework::RegistRecvSocket(SOCKET recvSocket, SOCKADDR_IN recvSockI
 			exit(0);
 		}				
 		/// 수신 되면 수신 메시지 큐에 넣기	
-		RecvMSG recvMSG;
-		//recvSockInfo.sin_port = 7000;
-		//recvMSG.sockAddr = recvSockInfo;		
-		//// 버퍼 앞부분 지시 메시지를 까서 누가 보냈는지 처리하기?
-		//unsigned int commandMsg;
-		//char decodeBuffer[BUFFER_SIZE];
-		//int msgPivot = 0;
-		//memset(decodeBuffer, 0, sizeof(decodeBuffer));
-		//// 지시 메시지
-		//for (int i = 0; i < 4; ++i) {							// 바이트 만큼 버퍼에 쌓고
-		//	decodeBuffer[i] = buffer[i];
-		//	msgPivot++;	// msg 어디까지 읽었나 pivot에 기록
-		//}
-		//memcpy(&commandMsg, decodeBuffer, sizeof(commandMsg));	// 메모리 복사
-		//printf("CommandMsg:%d\n", commandMsg);
-
-
+		RecvMSG recvMSG;		
 		memcpy(recvMSG.buffer, buffer, sizeof(buffer));
 		recvMsgQueue.push(recvMSG);
 	}
@@ -325,7 +289,7 @@ inline void NetworkFramework::AddDataToBuffer(char** buffer, T Data, int* pivot)
 
 	// buffer[pivot]부터 쌓음
 	for (int i = 0; i < sizeof(Data); ++i) {
-		buffer[*pivot + i] = dataBuffer[i];
+		*buffer[*pivot + i] = dataBuffer[i];
 	}
 	*pivot += sizeof(Data);
 }
