@@ -4,16 +4,15 @@
 #include <iostream>
 #include <thread>
 #include <future>
+#include <iostream>
 #pragma comment (lib,"ws2_32.lib") // 윈속 라이브러리 링크
 #define BUFFER_SIZE 1024 // 버퍼 사이즈
 
 using namespace std;
 
 
-typedef struct RecvMSG {    
-    int sender; // 누가 보냈는지
-    char buffer[BUFFER_SIZE];
-    
+typedef struct RecvMSG {        
+    char buffer[BUFFER_SIZE];    
 } RecvMSG;
 
 typedef struct SendMSG {    
@@ -45,7 +44,9 @@ public:
     void RunSendMsgQueue();
     bool SendMsg(SOCKET sendSocket, SOCKADDR_IN sendSockInfo, char* msg);    // 소켓, 어디로 보낼지, 메시지
     void EncodeMsg(char* msg);
-    void DecodeMsg(char* msg);   // 수신한 바이너리 형태의 메시지를 디코딩
+    void DecodeMsg(char* msg);   // 수신한 바이너리 형태의 메시지를 디코딩    
+    template <typename T>
+    void AddDataToBuffer(char** buffer, T Data, int* pivot);
     bool BindSocket(SOCKET socket, SOCKADDR_IN sockaddr_in);                  // Server 측에서 처음에 Bind 해줘야 함
 
 };

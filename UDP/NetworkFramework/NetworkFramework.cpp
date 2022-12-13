@@ -302,6 +302,7 @@ void NetworkFramework::DecodeMsg(char* msg)
 	}	
 }
 
+
 bool NetworkFramework::BindSocket(SOCKET listenSocket, SOCKADDR_IN serverAddr_in)
 {
 	if (::bind(listenSocket, (struct sockaddr*)&serverAddr_in, sizeof(serverAddr_in)) == SOCKET_ERROR) {  //바인드 소켓에 서버정보 부여    
@@ -313,3 +314,18 @@ bool NetworkFramework::BindSocket(SOCKET listenSocket, SOCKADDR_IN serverAddr_in
 	return true;
 }
 
+// buufer[pivot]부터 Data를 length 만큼 쌓아 반환
+template<typename T>
+inline void NetworkFramework::AddDataToBuffer(char** buffer, T Data, int* pivot)
+{
+	// dataBuffer에 Data 변환해서 넣고
+	char dataBuffer[BUFFER_SIZE];
+	memset(dataBuffer, 0, sizeof(dataBuffer));
+	memcpy(dataBuffer, Data, sizeof(Data));
+
+	// buffer[pivot]부터 쌓음
+	for (int i = 0; i < sizeof(Data); ++i) {
+		buffer[*pivot + i] = dataBuffer[i];
+	}
+	*pivot += sizeof(Data);
+}
