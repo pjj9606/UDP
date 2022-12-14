@@ -34,9 +34,7 @@ public:
     SOCKADDR_IN NewSocketAddrIn(const char* server_ip, int server_port);
     bool LoadWSA();
     void RegistRecvSocket(SOCKET recvSocket, SOCKADDR_IN recvSocketInfo);
-    void RegistSendSocket(SOCKET sendSocket, SOCKADDR_IN sendSocketInfo);    
-    // 클래스 멤버변수를 스레드로 실행시키기 위함
-    // https://stackoverflow.com/questions/10673585/start-thread-with-member-function
+    void RegistSendSocket(SOCKET sendSocket, SOCKADDR_IN sendSocketInfo);        
     thread GetRegistRecvSockThread(SOCKET recvSocket, SOCKADDR_IN recvSockInfo);       
     thread GetRecvMsgQueueThread();
     thread GetSendMsgQueueThread();    
@@ -46,7 +44,7 @@ public:
     void EncodeMsg(char* msg);
     void DecodeMsg(char* msg);   // 수신한 바이너리 형태의 메시지를 디코딩    
     template <typename T>
-    void AddDataToBuffer(char** buffer, T Data, int* pivot);
+    void AddDataToBuffer(char* buffer, T Data, int* pivot);     // Encode를 위한 함수, buffer[*pivot]부터 Data를 byte 단위로 쌓아줌
     bool BindSocket(SOCKET socket, SOCKADDR_IN sockaddr_in);                  // Server 측에서 처음에 Bind 해줘야 함
 
 };
